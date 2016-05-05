@@ -9,50 +9,31 @@
 import UIKit
 
 class PhotoViewController: UIViewController {
-    @IBOutlet weak var imageView: UIImageView!
+   
+    @IBOutlet weak var collectionView: UICollectionView!
+
     var store: PhotoStore!
+    let photoDataSource = PhotoDataSource()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        collectionView.dataSource = PhotoDataSource()
+        
         store.fetchRecentPhotos() {
-            (PhotosResult) -> Void in
+            (photosResult) -> Void in
             
-            switch PhotosResult {
-                
-            case let .Success(photos):
-                print("Successfuly found \(photos.count) recent photos.")
-                
-                if let firstPhoto = photos.first {
-                    self.store.fetchImageForPhoto(firstPhoto, completion: { (ImageResult) -> Void in
-                        switch ImageResult {
-                        case let .Success(image):
-                            //self.imageView.image = image
-                            NSOperationQueue.mainQueue().addOperationWithBlock {
-                                self.imageView.image = image
-                            }
-                        case let .Failure(error):
-                            print("Error downloading image \(error)")
-                            
-                        }
-                    })
+            NSOperationQueue.mainQueue().addOperationWithBlock() {
+                switch photosResult {
+                case let .Success(photos):
+                    print("SUCCESSFULLY FOUND \(photos.count) RECENT PHOTOS")
+                    self.photoDataSource.photos = photos
+                case let .Failure(error):
+                    self.photoDataSource.photos.removeAll()
+                    print("ERROR FETCHING RECENT PHOTOS:\(error)")
                 }
-                
-            case let .Failure(error):
-                print("Error fetching recent photos \(error)")
+                self.collectionView.reloadSections(NSIndexSet(index: 0))
             }
         }
-        
-        // Do any additional setup after loading the view.
     }
-    
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    @IBAction func nextPhotoButtonTapped(sender: AnyObject) {
-   
-        
-    }
-    
 }
